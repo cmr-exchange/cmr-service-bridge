@@ -120,7 +120,7 @@
     (get-cached system
                 (concepts-key collection :granules)
                 granule/async-get-metadata
-                [search-endpoint user-token params])))
+                [system search-endpoint user-token params])))
 
 (defmethod get :services
   [_type system search-endpoint user-token collection-id service-ids]

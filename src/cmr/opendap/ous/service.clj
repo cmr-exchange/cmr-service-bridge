@@ -20,7 +20,7 @@
     (str "page_size=" (count service-ids)))))
 
 (defn async-get-metadata
-  "Given a service-id, get the metadata for the associate service."
+  "Given one or more service-ids, get the metadata for the associated services."
   [search-endpoint user-token service-ids]
   (if (seq service-ids)
     (let [url (str search-endpoint "/services")

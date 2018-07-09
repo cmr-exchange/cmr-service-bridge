@@ -10,6 +10,7 @@
    [cmr.opendap.errors :as errors]
    [cmr.opendap.ous.collection :as collection]
    [cmr.opendap.ous.granule :as granule]
+   [cmr.opendap.ous.service :as service]
    [cmr.opendap.ous.variable :as variable]
    [cmr.opendap.util :as util]
    [com.stuartsierra.component :as component]
@@ -23,6 +24,19 @@
 (defn concept-key
   [id]
   (str "concept:" id))
+
+(defn concept-group-key
+  [collection-id group-keyword]
+  (concept-key (str collection-id group-keyword)))
+
+(defn implicit-concepts-key
+  [collection-id group-keyword]
+  [(concept-group-key collection-id group-keyword)])
+
+(defn concepts-key
+  [collection-id concept-ids]
+  (map #(concept-key (str collection-id ":" %))
+       concept-ids))
 
 (defn- -get-single-cached
   [system cache-key lookup-fn lookup-args]
@@ -100,12 +114,23 @@
   [_type system search-endpoint user-token params]
   (let [collection (:collection-id params)
         granules (:granules params)
-        expllicit-cache-keys (map #(concept-key (str collection ":" %))
-                                  granules)
-        implicit-cache-keys [(concept-key (str collection ":granules"))]]
+        expllicit-cache-keys (concepts-key collection granules)
+        implicit-cache-keys (implicit-concepts-key collection :granules)]
     (get-cached system
                 (if (seq granules) expllicit-cache-keys implicit-cache-keys)
                 granule/async-get-metadata
+                [search-endpoint user-token params]
+                {:multi-key? true})))
+
+(defmethod get :services
+  [_type system search-endpoint user-token params]
+  (let [collection (:collection-id params)
+        services (:services params)
+        expllicit-cache-keys (concepts-key collection services)
+        implicit-cache-keys (implicit-concepts-key collection :services)]
+    (get-cached system
+                (if (seq services) expllicit-cache-keys implicit-cache-keys)
+                service/async-get-metadata
                 [search-endpoint user-token params]
                 {:multi-key? true})))
 
@@ -113,9 +138,8 @@
   [_type system search-endpoint user-token params]
   (let [collection (:collection-id params)
         variables (:variables params)
-        expllicit-cache-keys (map #(concept-key (str collection ":" %))
-                                  variables)
-        implicit-cache-keys [(concept-key (str collection ":variables"))]]
+        expllicit-cache-keys (concepts-key collection variables)
+        implicit-cache-keys (implicit-concepts-key collection :variables)]
     (get-cached system
                 (if (seq variables) expllicit-cache-keys implicit-cache-keys)
                 variable/async-get-metadata

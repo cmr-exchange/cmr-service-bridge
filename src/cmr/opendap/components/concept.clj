@@ -27,18 +27,9 @@
   [id]
   (str "concept:" id))
 
-(defn concept-group-key
+(defn concepts-key
   [collection-id group-keyword]
   (concept-key (str collection-id group-keyword)))
-
-(defn implicit-concepts-key
-  [collection-id group-keyword]
-  [(concept-group-key collection-id group-keyword)])
-
-(defn concepts-key
-  [collection-id concept-ids]
-  (map #(concept-key (str collection-id ":" %))
-       concept-ids))
 
 (defn- -get-single-cached
   [system cache-key lookup-fn lookup-args]
@@ -127,34 +118,25 @@
   (let [collection (:collection-id params)
         granules (:granules params)]
     (get-cached system
-                (if (seq granules)
-                  (concepts-key collection granules)
-                  (implicit-concepts-key collection :granules))
+                (concepts-key collection :granules)
                 granule/async-get-metadata
-                [search-endpoint user-token params]
-                {:multi-key? true})))
+                [search-endpoint user-token params])))
 
 (defmethod get :services
   [_type system search-endpoint user-token collection-id service-ids]
   (get-cached system
-              (if (seq service-ids)
-                (concepts-key collection-id service-ids)
-                (implicit-concepts-key collection-id :services))
+              (concepts-key collection-id :services)
               service/async-get-metadata
-              [search-endpoint user-token service-ids]
-              {:multi-key? true}))
+              [search-endpoint user-token service-ids]))
 
 (defmethod get :variables
   [_type system search-endpoint user-token params]
   (let [collection (:collection-id params)
         variables (:variables params)]
     (get-cached system
-                (if (seq variables)
-                  (concepts-key collection variables)
-                   (implicit-concepts-key collection :variables))
+                (concepts-key collection :variables)
                 variable/async-get-metadata
-                [search-endpoint user-token params]
-                {:multi-key? true})))
+                [search-endpoint user-token params])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;   Component Lifecycle Implementation   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

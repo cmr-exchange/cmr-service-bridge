@@ -244,7 +244,8 @@
     [coll params data-files service-ids vars errs]))
 
 (defn stage3
-  [component coll search-endpoint user-token bounding-box service-ids vars]
+  [component coll search-endpoint user-token collection-id bounding-box
+   service-ids vars]
   ;; XXX coll is required as an arg here because it's needed in a
   ;;     workaround for different data sets using different starting
   ;;     points for their indices in OPeNDAP
@@ -253,6 +254,9 @@
   (log/debug "Starting stage 3 ...")
   (let [services-promise (service/async-get-metadata
                           search-endpoint user-token service-ids)
+        ; services-promise (concept/get :services
+        ;                   component search-endpoint user-token collection-id
+        ;                   service-ids)
         bounding-infos (map #(variable/extract-bounding-info
                               coll % bounding-box)
                             vars)
@@ -301,6 +305,7 @@
                 coll
                 search-endpoint
                 user-token
+                (:collection-id params)
                 bounding-box
                 service-ids
                 vars)

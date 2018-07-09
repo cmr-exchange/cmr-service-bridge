@@ -113,35 +113,33 @@
 (defmethod get :granules
   [_type system search-endpoint user-token params]
   (let [collection (:collection-id params)
-        granules (:granules params)
-        expllicit-cache-keys (concepts-key collection granules)
-        implicit-cache-keys (implicit-concepts-key collection :granules)]
+        granules (:granules params)]
     (get-cached system
-                (if (seq granules) expllicit-cache-keys implicit-cache-keys)
+                (if (seq granules)
+                  (concepts-key collection granules)
+                  (implicit-concepts-key collection :granules))
                 granule/async-get-metadata
                 [search-endpoint user-token params]
                 {:multi-key? true})))
 
 (defmethod get :services
-  [_type system search-endpoint user-token params]
-  (let [collection (:collection-id params)
-        services (:services params)
-        expllicit-cache-keys (concepts-key collection services)
-        implicit-cache-keys (implicit-concepts-key collection :services)]
-    (get-cached system
-                (if (seq services) expllicit-cache-keys implicit-cache-keys)
-                service/async-get-metadata
-                [search-endpoint user-token params]
-                {:multi-key? true})))
+  [_type system search-endpoint user-token collection-id service-ids]
+  (get-cached system
+              (if (seq service-ids)
+                (concepts-key collection-id service-ids)
+                (implicit-concepts-key collection-id :services))
+              service/async-get-metadata
+              [search-endpoint user-token service-ids]
+              {:multi-key? true}))
 
 (defmethod get :variables
   [_type system search-endpoint user-token params]
   (let [collection (:collection-id params)
-        variables (:variables params)
-        expllicit-cache-keys (concepts-key collection variables)
-        implicit-cache-keys (implicit-concepts-key collection :variables)]
+        variables (:variables params)]
     (get-cached system
-                (if (seq variables) expllicit-cache-keys implicit-cache-keys)
+                (if (seq variables)
+                  (concepts-key collection variables)
+                   (implicit-concepts-key collection :variables))
                 variable/async-get-metadata
                 [search-endpoint user-token params]
                 {:multi-key? true})))

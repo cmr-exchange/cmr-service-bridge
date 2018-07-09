@@ -6,7 +6,6 @@
   by single use or composition."
   (:require
    [cheshire.core :as json]
-   [cheshire.generate :as json-gen]
    [clojure.data.xml :as xml]
    [clojure.string :as string]
    [cmr.authz.errors :as authz-errors]
@@ -15,8 +14,6 @@
    [ring.util.http-response :as ring-response]
    [taoensso.timbre :as log]
    [xml-in.core :as xml-in])
-  (:import
-    (java.lang.ref SoftReference))
   (:refer-clojure :exclude [error-handler]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -35,32 +32,6 @@
 (def errors response/errors)
 (def error response/error)
 (def not-allowed response/not-allowed)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;   Utility functions   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn soft-reference->json!
-  "Given a soft reference object and a Cheshire JSON generator, write the
-  data stored in the soft reference to the generator as a JSON string.
-
-  Note, however, that sometimes the value is not a soft reference, but rather
-  a raw value from the response. In that case, we need to skip the object
-  conversion, and just do the realization."
-  [obj json-generator]
-  (let [data @(if (isa? obj SoftReference)
-                (.get obj)
-                obj)
-        data-str (json/generate-string data)]
-    (log/trace "Encoder got data: " data)
-    (.writeString json-generator data-str)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;   Global operations   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; This adds support for JSON-encoding the data cached in a SoftReference.
-(json-gen/add-encoder SoftReference soft-reference->json!)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;   Custom Response Functions   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -15,6 +15,8 @@
    [cmr.opendap.util :as util]
    [com.stuartsierra.component :as component]
    [taoensso.timbre :as log])
+  (:import
+    (java.lang.ref SoftReference))
   (:refer-clojure :exclude [get]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -60,6 +62,15 @@
       (log/error e)
       {:errors (errors/exception-data e)})))
 
+(defn soft-reference->
+  "An object retrieved from the concept cache will be a soft reference. This
+  function supports usage from situations where the data may not be cached,
+  in which case it acts as an identity."
+  [obj]
+  (if (= SoftReference (type obj))
+    (.get obj)
+    obj))
+
 (defn- -get-cached
   "This does the actual work for the cache lookup and fallback function call."
   ([system cache-key lookup-fn lookup-args]
@@ -69,9 +80,10 @@
      (log/trace "lookup-fn:" lookup-fn)
      (log/trace "lookup-args:" lookup-args)
      (log/trace "Cache key(s):" cache-key)
-     (if multi-key?
-       (-get-multiple-cached system cache-key lookup-fn lookup-args)
-       (-get-single-cached system cache-key lookup-fn lookup-args)))))
+     (soft-reference->
+      (if multi-key?
+        (-get-multiple-cached system cache-key lookup-fn lookup-args)
+        (-get-single-cached system cache-key lookup-fn lookup-args))))))
 
 (defn get-cached
   "Look up the concept for a concept-id in the cache; if there is a miss,

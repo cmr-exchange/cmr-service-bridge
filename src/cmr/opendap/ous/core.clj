@@ -165,11 +165,11 @@
     []
 
     ;; Condition 2 - variables but no spatial subsetting
-    (and (nil? bounding-box) (seq variables))
-    (variable/get-metadata search-endpoint user-token params)
-
     ;; Condition 3 - variables and spatial subsetting
-    (and bounding-box (seq variables))
+    ;; Note that these two conditions can be collapsed into a single
+    ;; cond phrase, since the call and args to the function are the
+    ;; same in both cases.
+    (seq variables)
     (variable/get-metadata search-endpoint user-token params)
 
     ;; Condition 4 - spatial subsetting but no variables

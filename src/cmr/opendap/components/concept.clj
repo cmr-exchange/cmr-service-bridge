@@ -10,6 +10,7 @@
    [cmr.opendap.errors :as errors]
    [cmr.opendap.ous.collection :as collection]
    [cmr.opendap.ous.granule :as granule]
+   [cmr.opendap.ous.variable :as variable]
    [cmr.opendap.util :as util]
    [com.stuartsierra.component :as component]
    [taoensso.timbre :as log])
@@ -105,6 +106,19 @@
     (get-cached system
                 (if (seq granules) expllicit-cache-keys implicit-cache-keys)
                 granule/async-get-metadata
+                [search-endpoint user-token params]
+                {:multi-key? true})))
+
+(defmethod get :variables
+  [_type system search-endpoint user-token params]
+  (let [collection (:collection-id params)
+        variables (:variables params)
+        expllicit-cache-keys (map #(concept-key (str collection ":" %))
+                                  variables)
+        implicit-cache-keys [(concept-key (str collection ":variables"))]]
+    (get-cached system
+                (if (seq variables) expllicit-cache-keys implicit-cache-keys)
+                variable/async-get-metadata
                 [search-endpoint user-token params]
                 {:multi-key? true})))
 

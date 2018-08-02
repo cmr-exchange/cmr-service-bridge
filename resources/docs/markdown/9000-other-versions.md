@@ -2,6 +2,6 @@
 
 ### API Reference
 
-* [Development](../../current/reference)
-* [1.0.0](../../1.0.0/reference)
+* [Development](../../current/reference/index.html)
+* [1.0.0](../../1.0.0/reference/index.html)
 

@@ -49,7 +49,8 @@
              "-Xms2g"
              "-Xmx2g"]
   :main cmr.opendap.core
-  :aot [cmr.opendap.core]
+  :aot [clojure.tools.logging.impl
+        cmr.opendap.core]
   :profiles {
     :ubercompile {
       :aot :all

@@ -49,7 +49,12 @@
                  "/opendap/docs/current/rest-api"}}
  :logging {
    :level :debug
-   :nss [cmr.opendap cmr.authz cmr.http.kit cmr.mission-control org.httpkit]
+   :nss [cmr.opendap
+         cmr.authz
+         cmr.http.kit
+         cmr.mission-control
+         metosin
+         org.httpkit]
    :color false}
 :mission-control {
    :messaging-type :core-async}

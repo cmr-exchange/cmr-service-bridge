@@ -9,6 +9,8 @@
    [cmr.opendap.health :as health]
    [cmr.opendap.site.pages :as pages]
    [reitit.ring :as ring]
+   [reitit.swagger :as swagger]
+   [reitit.swagger-ui :as swagger-ui]
    [taoensso.timbre :as log]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -31,6 +33,16 @@
     :get (core-handler/dynamic-page
           pages/opendap-docs
           {:base-url (config/opendap-url httpd-component)})}]])
+
+(def swagger
+  [["/opendap/swagger"
+    {:get {:no-doc true
+          :handler (swagger-ui/create-swagger-ui-handler
+                    {:url "/opendap/swagger.json"})}}]
+   ["/opendap/swagger.json"
+    {:get {:no-doc true
+           :swagger {:info {:title "my-api"}}
+           :handler (swagger/create-swagger-handler)}}]])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;   Static & Redirect Routes   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -60,4 +72,5 @@
    (main httpd-component)
    (docs httpd-component)
    (redirects httpd-component)
-   (static httpd-component)))
+   (static httpd-component)
+   swagger))

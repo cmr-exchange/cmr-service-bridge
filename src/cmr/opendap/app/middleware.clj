@@ -2,6 +2,7 @@
   "Custom ring middleware for CMR OPeNDAP."
   (:require
    [clojure.string :as string]
+   [clojusc.twig :as logger]
    [cmr.opendap.components.auth :as auth]
    [cmr.opendap.components.config :as config]
    [cmr.opendap.http.request :as request]
@@ -148,5 +149,5 @@
                          (request/accept-media-type system req)
                          (request/accept-format system req))]
       (log/debug "API version:" api-version)
-      (log/trace "Made routes:" (vec routes))
+      (log/trace "Made routes:" (logger/pprint (vec routes)))
       (response/version-media-type (handler req) header))))

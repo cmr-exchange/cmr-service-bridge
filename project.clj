@@ -37,6 +37,8 @@
     [markdown-clj "1.0.2"]
     [metosin/reitit-core "0.1.3"]
     [metosin/reitit-ring "0.1.3"]
+    [metosin/reitit-swagger "0.1.3"]
+    [metosin/reitit-swagger-ui "0.1.3"]
     [metosin/ring-http-response "0.9.0"]
     [net.sf.geographiclib/GeographicLib-Java "1.49"]
     [org.clojure/clojure "1.9.0"]

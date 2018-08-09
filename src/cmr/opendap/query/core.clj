@@ -3,63 +3,80 @@
   using HTTP POST, keys in a JSON payload. Additionall, functions for working
   with these parameters are defined here."
   (:require
+   [clojure.set :as set]
    [clojure.string :as string]
+   [cmr.opendap.query.const :as const]
    [cmr.opendap.query.impl.wcs :as wcs]
    [cmr.opendap.query.impl.cmr :as cmr]
    [cmr.opendap.ous.util.core :as util]
    [cmr.opendap.results.errors :as errors]
    [taoensso.timbre :as log])
+  (:import
+   (cmr.opendap.query.impl.cmr CollectionCmrStyleParams)
+   (cmr.opendap.query.impl.wcs CollectionWcsStyleParams))
   (:refer-clojure :exclude [parse]))
 
-(defn params?
-  [type params]
-  (case type
-    :wcs (wcs/params? params)
-    :cmr (cmr/params? params)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;   Initial Setup & Utility Functions   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn create-params
-  [type params]
-  (case type
-    :wcs (wcs/create-params params)
-    :cmr (cmr/create-params params)))
+(def params-keys
+  "This function returns only the record fields that are unique to the
+  WCS-style parameters. This is done by checking against a hard-coded set of
+  shared fields (see the `const` namespace)."
+  (set/difference
+   (set (keys (wcs/map->CollectionWcsStyleParams {})))
+   const/shared-keys))
 
-(defn wcs->cmr
-  [params]
-  (let [subset (:subset params)]
-    (-> params
-        (assoc :collection-id (or (:collection-id params)
-                                  (util/coverage->collection (:coverage params)))
-               :granules (util/coverage->granules (:coverage params))
-               :variables (:rangesubset params)
-               ;; There was never an analog in wcs for exclude-granules, so set
-               ;; to false.
-               :exclude-granules false
-               :bounding-box (when (seq subset)
-                              (util/subset->bounding-box subset))
-               :temporal (:timeposition params))
-        (dissoc :coverage :rangesubset :timeposition)
-        (cmr/map->CollectionCmrStyleParams))))
+(defn wcs-style?
+  [raw-params]
+  "This function checks the raw params to see if they have any keys that
+  overlap with the WCS-style record."
+  (seq (set/intersection
+        (set (keys raw-params))
+        params-keys)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;   Protocol Defnition   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defprotocol CollectionParamsAPI
+  (->cmr [this]))
+
+(extend CollectionCmrStyleParams
+        CollectionParamsAPI
+        cmr/collection-behaviour)
+
+(extend CollectionWcsStyleParams
+        CollectionParamsAPI
+        wcs/collection-behaviour)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;   Constructor   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn create
+  ([raw-params]
+    (create (cond (wcs-style? raw-params) :wcs
+                  (:collection-id raw-params) :cmr
+                  :else :unknown-parameters-type)
+            raw-params))
+  ([params-type raw-params]
+    (case params-type
+      :wcs (wcs/create raw-params)
+      :cmr (cmr/create raw-params)
+      :unknown-parameters-type {:errors [errors/invalid-parameter
+                                         (str "Parameters: " raw-params)]})))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;   High-level API   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn parse
+  "This is a convenience function for calling code that wants to create a
+  collection params instance "
   [raw-params]
-  (log/trace "Got params:" raw-params)
-  (let [params (util/normalize-params raw-params)]
-    (cond (params? :cmr params)
-          (do
-            (log/trace "Parameters are of type `collection` ...")
-            (create-params :cmr params))
-
-          (params? :wcs params)
-          (do
-            (log/trace "Parameters are of type `ous-prototype` ...")
-            (wcs->cmr
-             (create-params :wcs params)))
-
-          (:collection-id params)
-          (do
-            (log/trace "Found collection id; assuming `collection` ...")
-            (create-params :cmr params))
-
-          :else
-          {:errors [errors/invalid-parameter
-                    (str "Parameters: " params)]})))
+  (let [collection-params (create raw-params)]
+    (if (errors/erred? collection-params)
+      collection-params
+      (->cmr collection-params))))

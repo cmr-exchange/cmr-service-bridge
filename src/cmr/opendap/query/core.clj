@@ -6,13 +6,15 @@
    [clojure.set :as set]
    [clojure.string :as string]
    [cmr.opendap.query.const :as const]
-   [cmr.opendap.query.impl.wcs :as wcs]
    [cmr.opendap.query.impl.cmr :as cmr]
+   [cmr.opendap.query.impl.giovanni :as giovanni]
+   [cmr.opendap.query.impl.wcs :as wcs]
    [cmr.opendap.ous.util.core :as util]
    [cmr.opendap.results.errors :as errors]
    [taoensso.timbre :as log])
   (:import
    (cmr.opendap.query.impl.cmr CollectionCmrStyleParams)
+   (cmr.opendap.query.impl.giovanni CollectionGiovanniStyleParams)
    (cmr.opendap.query.impl.wcs CollectionWcsStyleParams))
   (:refer-clojure :exclude [parse]))
 
@@ -36,6 +38,14 @@
         (set (keys raw-params))
         params-keys)))
 
+(defn giovanni-style?
+  "This function checks the raw params to see if they have any keys that
+  overlap with the Giovanni-style record."
+  [raw-params]
+  (seq (set/intersection
+         (set (keys raw-params))
+         (set (keys (giovanni/map->CollectionGiovanniStyleParams {}))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;   Protocol Defnition   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -51,6 +61,10 @@
         CollectionParamsAPI
         wcs/collection-behaviour)
 
+(extend CollectionGiovanniStyleParams
+        CollectionParamsAPI
+        giovanni/collection-behaviour)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;   Constructor   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -58,6 +72,7 @@
 (defn create
   ([raw-params]
     (create (cond (wcs-style? raw-params) :wcs
+                  (giovanni-style? raw-params) :giovanni
                   (:collection-id raw-params) :cmr
                   :else :unknown-parameters-type)
             raw-params))
@@ -65,6 +80,7 @@
     (case params-type
       :wcs (wcs/create raw-params)
       :cmr (cmr/create raw-params)
+      :giovanni (giovanni/create raw-params)
       :unknown-parameters-type {:errors [errors/invalid-parameter
                                          (str "Parameters: " raw-params)]})))
 

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+DOCS_REPO=https://github.com/cmr-exchange/cmr-service-bridge-docs.git
+DOCS_BUILD_DIR=docs-builder
+git clone --depth 1 $DOCS_REPO $DOCS_BUILD_DIR
+cd $DOCS_BUILD_DIR && lein docs
+cd -
+rm -rf resources/public/docs
+cp -r $DOCS_BUILD_DIR/resources/public/docs resources/public

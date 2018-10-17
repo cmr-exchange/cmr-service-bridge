@@ -14,3 +14,5 @@ pom.xml.asc
 /data/cache
 /junit-test-results
 /resources/docs/rest-api/slate
+/resources/public/docs
+/docs-repo

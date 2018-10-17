@@ -1,0 +1,10 @@
+#!/bin/bash
+
+CLONE_DIR=docs-repo
+DOCS_SRC=${CLONE_DIR}/resources/public/docs
+DOCS_DST=resources/public
+
+rm -rf $DOCS_DST/docs
+git clone --depth=1 https://github.com/cmr-exchange/cmr-service-bridge-docs.git $CLONE_DIR
+cp -r $DOCS_SRC $DOCS_DST
+rm -rf $CLONE_DIR

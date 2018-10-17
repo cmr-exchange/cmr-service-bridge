@@ -52,6 +52,8 @@
     [ring/ring-defaults "0.3.2"]
     [selmer "1.12.2"]
     [tolitius/xml-in "0.1.0"]]
+  :plugins [
+    [lein-shell "0.5.0"]]
   :jvm-opts ["-XX:-OmitStackTraceInFastThrow"
              "-Xms2g"
              "-Xmx2g"]
@@ -86,7 +88,6 @@
         [proto-repl "0.3.1"]]
       :plugins [
         [lein-project-version "0.1.0"]
-        [lein-shell "0.5.0"]
         [venantius/ultra "0.5.2"]]
       :source-paths ["dev-resources/src"]
       :jvm-opts [
@@ -121,46 +122,7 @@
         :unit #(not (or (:integration %) (:system %)))
         :integration :integration
         :system :system
-        :default (complement :system)}}
-    :docs {
-      :dependencies [
-        [gov.nasa.earthdata/codox-theme "1.0.0-SNAPSHOT"]]
-      :plugins [
-        [lein-codox "0.10.5"]
-        [lein-marginalia "0.9.1"]]
-      :source-paths ["resources/docs/src"]
-      :codox {
-        :project {
-          :name "CMR OPeNDAP"
-          :description "OPeNDAP/CMR Integration"}
-        :namespaces [#"^cmr\.opendap\.(?!dev)"]
-        :metadata {
-          :doc/format :markdown
-          :doc "Documentation forthcoming"}
-        :themes [:eosdis]
-        :html {
-          :transforms [[:head]
-                       [:append
-                         [:script {
-                           :src "https://cdn.earthdata.nasa.gov/tophat2/tophat2.js"
-                           :id "earthdata-tophat-script"
-                           :data-show-fbm "true"
-                           :data-show-status "true"
-                           :data-status-api-url "https://status.earthdata.nasa.gov/api/v1/notifications"
-                           :data-status-polling-interval "10"}]]
-                       [:body]
-                       [:prepend
-                         [:div {:id "earthdata-tophat2"
-                                :style "height: 32px;"}]]
-                       [:body]
-                       [:append
-                         [:script {
-                           :src "https://fbm.earthdata.nasa.gov/for/CMR/feedback.js"
-                           :type "text/javascript"}]]]}
-        :doc-paths ["resources/docs/markdown"]
-        :output-path "resources/public/docs/opendap/docs/current/reference"}}
-      :slate {
-        :plugins [[lein-shell "0.5.0"]]}}
+        :default (complement :system)}}}
   :aliases {
     ;; Dev & Testing Aliases
     "repl" ["do"
@@ -199,17 +161,7 @@
       ["clean"]
       ["nvd" "check"]]
     ;; Documentation and static content
-    "codox" ["with-profile" "+docs,+system,+geo" "codox"]
-    "marginalia" ["with-profile" "+docs,+system,+geo"
-      "marg" "--dir" "resources/public/docs/opendap/docs/current/marginalia"
-             "--file" "index.html"
-             "--name" "OPeNDAP/CMR Integration"]
-    "slate" ["with-profile" "+slate"
-      "shell" "resources/scripts/build-slate-docs"]
-    "docs" ["do"
-      ["codox"]
-      ["marginalia"]
-      ["slate"]]
+    "docs" ["shell" "resources/scripts/add-docs"]
     ;; Build tasks
     "build-jar" ["with-profile" "+security" "jar"]
     "build-uberjar" ["with-profile" "+security" "uberjar"]
@@ -226,9 +178,7 @@
       ["ltest" ":unit"]
       ["junit" ":unit"]
       ["ubercompile"]
-      ["build-uberjar"]]
-    "build-full" ["do"
-      ["build"]
+      ["build-uberjar"]
       ["docs"]]
     ;; Publishing
     "publish" ["with-profile" "+system,+security,+geo" "do"
@@ -238,4 +188,10 @@
     ;; Application
     "run" ["with-profile" "+system,+security" "run"]
     "trampoline" ["with-profile" "+system,+security" "trampoline"]
-    "start-service-bridge" ["trampoline" "run"]})
+    "start-service-bridge" ["trampoline" "run"]
+    "ngap-deploy" ["do"
+      ["clean"]
+      ["shell" "echo" "Preparing docs for deployment ..."]
+      ["docs"]
+      ["shell" "echo" "Starting up service components ..."]
+      ["trampoline" "run"]]})

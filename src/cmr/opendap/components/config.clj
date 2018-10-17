@@ -75,12 +75,12 @@
 ;; Overrides of the HTTPD config component
 (defn http-port
   [system]
-  (or (get-in (get-cfg system) [:cmr :opendap :port])
+  (or (get-in (get-cfg system) [:cmr :service :bridge :port])
       (httpd-config/http-port system)))
 
 (defn http-base-url
   [system]
-  (or (get-in (get-cfg system) [:cmr :opendap :relative :root :url])
+  (or (get-in (get-cfg system) [:cmr :service :bridge :relative :root :url])
       (httpd-config/http-base-url system)))
 
 (defn vendor

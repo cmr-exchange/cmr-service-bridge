@@ -12,7 +12,7 @@
    [clojure.tools.namespace.repl :as repl]
    [clojusc.system-manager.core :refer :all]
    [clojusc.twig :as logger]
-   [cmr.opendap.dev :as dev]
+   [cmr.service.bridge.dev :as dev]
    [org.httpkit.client :as httpc]))
 
 (logger/set-level! '[cmr org.httpkit] :debug logger/no-color-log-formatter)

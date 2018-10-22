@@ -16,7 +16,7 @@
        "\u001B[35m]\u001B[33m λ\u001B[m=> "))
 
 (defproject gov.nasa.earthdata/cmr-service-bridge "1.5.0-SNAPSHOT"
-  :description "OPeNDAP Integration in the CMR"
+  :description "A CMR 'connector' service that provides an inter-GIS-service API"
   :url "https://github.com/cmr-exchange/cmr-service-bridge"
   :license {
     :name "Apache License, Version 2.0"
@@ -34,7 +34,7 @@
     [gov.nasa.earthdata/cmr-jar-plugin "0.1.0-SNAPSHOT"]
     [gov.nasa.earthdata/cmr-metadata-proxy "0.1.0-SNAPSHOT"]
     [gov.nasa.earthdata/cmr-mission-control "0.1.0-SNAPSHOT"]
-    [gov.nasa.earthdata/cmr-ous-plugin "0.2.0-SNAPSHOT"]
+    [gov.nasa.earthdata/cmr-ous-plugin "0.3.0-SNAPSHOT"]
     [gov.nasa.earthdata/cmr-site-templates "0.1.0-SNAPSHOT"]
     [gov.nasa.earthdata/cmr-sizing-plugin "0.1.0-SNAPSHOT"]
     [http-kit "2.3.0"]
@@ -57,9 +57,9 @@
   :jvm-opts ["-XX:-OmitStackTraceInFastThrow"
              "-Xms2g"
              "-Xmx2g"]
-  :main cmr.opendap.core
+  :main cmr.service.bridge.core
   :aot [clojure.tools.logging.impl
-        cmr.opendap.core]
+        cmr.service.bridge.core]
   :profiles {
     :ubercompile {
       :aot :all
@@ -96,7 +96,7 @@
       :dependencies [
         [debugger "0.2.1"]]
       :repl-options {
-        :init-ns cmr.opendap.dev
+        :init-ns cmr.service.bridge.dev
         :prompt ~get-prompt
         :init ~(println (get-banner))}}
     :lint {
@@ -133,9 +133,9 @@
       ["with-profile" "+local,+system,+geo" "repl"]]
     "version" ["do"
       ["version"]
-      ["shell" "echo" "-n" "CMR-OPeNDAP: "]
+      ["shell" "echo" "-n" "CMR Service-Bridge: "]
       ["project-version"]]
-    "ubercompile" ["with-profile" "+system,+geo,+local,+security" "compile"]
+    "ubercompile" ["with-profile" "+ubercompile,+system,+geo,+local,+security" "compile"]
     "uberjar" ["with-profile" "+system,+geo" "uberjar"]
     "uberjar-aot" ["with-profile" "+system,+geo,+ubercompile,+security" "uberjar"]
     "check-vers" ["with-profile" "+lint,+system,+geo,+security" "ancient" "check" ":all"]

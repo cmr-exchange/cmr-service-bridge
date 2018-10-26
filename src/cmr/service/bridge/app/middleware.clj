@@ -5,6 +5,7 @@
    [cmr.ous.util.http.request :as request]
    [cmr.http.kit.response :as response]
    [cmr.metadata.proxy.components.auth :as auth]
+   [cmr.versioning.rest.middleware :as middleware]
    [reitit.ring :as ring]
    [taoensso.timbre :as log]))
 
@@ -32,18 +33,8 @@
 
 (defn wrap-api-version-dispatch
   ""
-  ([site-routes route-data system]
-    (wrap-api-version-dispatch
-      site-routes route-data system (reitit-auth system)))
-  ([site-routes {:keys [main-api-routes-fn plugins-api-routes-fns]} system opts]
-    (fn [req]
-      (let [api-version (request/accept-api-version system req)
-            plugins-api-routes (vec (mapcat #(% system api-version) plugins-api-routes-fns))
-            api-routes (vec (main-api-routes-fn system api-version))
-            routes (concat (vec site-routes) plugins-api-routes api-routes)
-            handler (ring/ring-handler (ring/router routes opts))]
-        (log/debug "API version:" api-version)
-        (log/debug "Made routes:" (pprint routes))
-        (response/version-media-type
-          (handler req)
-          (request/accept-media-type-format system req))))))
+  [site-routes route-data system]
+  (middleware/wrap-api-version-dispatch
+    site-routes
+    route-data
+    {:auth-wrapper reitit-auth}))
